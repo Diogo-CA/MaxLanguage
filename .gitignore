@@ -1,8 +1,42 @@
+# ==========================================
+# 1. Arquivos do Sistema Operacional (Mac/Windows)
+# ==========================================
+.DS_Store
+.AppleDouble
+.LSOverride
+Thumbs.db
+ehthumbs.db
+
+# ==========================================
+# 2. Arquivos Temporários do Python
+# ==========================================
 # Byte-compiled / optimized / DLL files
 __pycache__/
+*.py[cod]
 *$py.class
+*.so
 
+# ==========================================
+# 3. Ambientes Virtuais (Virtualenvs)
+# ==========================================
 venv/
+.venv/
+env/
+.env/
 ENV/
 
+# ==========================================
+# 4. Configurações da IDE (PyCharm / VSCode)
+# ==========================================
+.idea/
+.vscode/
+*.swp
+*.swo
 
+# ==========================================
+# 5. Dados do Projeto MaxLanguage (Opcional)
+# ==========================================
+# Se vocês não quiserem que os dados de teste fiquem salvos no GitHub,
+# descomentem as linhas abaixo removendo a hashtag (#).
+# data/*.txt
+# data/*.dat
