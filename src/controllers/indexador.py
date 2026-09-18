@@ -30,7 +30,7 @@ class Indexador:
         for posicao, linha in enumerate(linhas):
             partes = linha.split(";")
 
-            if len(partes) > 0 and partes[0].isdigit():
+            if len(partes) > 0 and partes[0].isdigit() and int(partes[0]) != 0:
                 codigo = int(partes[0])
 
                 arvore.inserir(codigo, posicao)
