@@ -13,12 +13,14 @@ class ArvoreBinaria:
         novo = No(codigo, posicao)
         if self.raiz is None:
             self.raiz = novo
-            return
+            return True
 
         atual = self.raiz
         pai = None
 
         while atual is not None:
+            if codigo == atual.codigo:
+                return False
             pai = atual
             if codigo < atual.codigo:
                 atual = atual.esquerda
@@ -28,7 +30,8 @@ class ArvoreBinaria:
         if codigo < pai.codigo:
             pai.esquerda = novo
         else:
-            pai.dereita = novo
+            pai.direita = novo
+        return True
 
     def buscar(self, codigo: int) -> No:
         atual = self.raiz
@@ -36,7 +39,7 @@ class ArvoreBinaria:
             if codigo == atual.codigo:
                 return atual
             if codigo < atual.codigo:
-                atual = atual.esquerda
+                atual = atual.esquerda  
             else:
                 atual = atual.direita
         return None
@@ -68,5 +71,19 @@ class ArvoreBinaria:
                 aux = self._menor(raiz.direita)
                 raiz.codigo = aux.codigo
                 raiz.posicao = aux.posicao
-                raiz.direita = self._excluir_recursivo(raiz.dereita, aux.codigo)
+                raiz.direita = self._excluir_recursivo(raiz.direita, aux.codigo)
         return raiz
+
+    def percorrer_em_ordem(self):
+        if self.raiz is None:
+            return []
+        listaOrdenada = []
+        self._percorrer_em_ordem_recursivo(self.raiz, listaOrdenada)
+        return listaOrdenada
+
+    def _percorrer_em_ordem_recursivo(self, raiz : No, listaOrdenada: list):
+        if raiz is None:
+            return
+        self._percorrer_em_ordem_recursivo(raiz.esquerda, listaOrdenada)
+        listaOrdenada.append((raiz.codigo, raiz.posicao))
+        self._percorrer_em_ordem_recursivo(raiz.direita, listaOrdenada)

@@ -15,14 +15,14 @@ class Indexador:
 
         self.arquivo_usuarios = "data/usuarios.txt"
         self.arquivo_idiomas = "data/idiomas.txt"
-        self.arquivo_livoces = "data/licoes.txt"
+        self.arquivo_licoes = "data/licoes.txt"
         self.arquivo_exercicios = "data/exercicios.txt"
 
     def carregar_indices(self):
         self._carregar_arvore(self.arquivo_usuarios, self.arvore_usuarios)
         self._carregar_arvore(self.arquivo_idiomas, self.arvore_idiomas)
         self._carregar_arvore(self.arquivo_licoes, self.arvore_licoes)
-        self._carregar_arvore(self.arquivo_exercicios, self.arquivo_exercicios)
+        self._carregar_arvore(self.arquivo_exercicios, self.arvore_exercicios)
 
     def _carregar_arvore(self, caminho_arquivo: str, arvore: ArvoreBinaria):
         linhas = FileManager.ler_todas_linhas(caminho_arquivo)
