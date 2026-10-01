@@ -85,5 +85,5 @@ class ArvoreBinaria:
         if raiz is None:
             return
         self._percorrer_em_ordem_recursivo(raiz.esquerda, listaOrdenada)
-        listaOrdenada.append((raiz.codigo, raiz.posicao))
+        listaOrdenada.append(raiz)
         self._percorrer_em_ordem_recursivo(raiz.direita, listaOrdenada)

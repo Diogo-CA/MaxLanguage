@@ -1,5 +1,5 @@
-from src.models.arvore_binaria import ArvoreBinaria
-from src.controllers.file_manager import FileManager
+from models.arvore_binaria import ArvoreBinaria
+from controllers.file_manager import FileManager
 
 class Indexador:
     """
@@ -13,10 +13,11 @@ class Indexador:
         self.arvore_licoes = ArvoreBinaria()
         self.arvore_exercicios = ArvoreBinaria()
 
-        self.arquivo_usuarios = "data/usuarios.txt"
-        self.arquivo_idiomas = "data/idiomas.txt"
-        self.arquivo_licoes = "data/licoes.txt"
-        self.arquivo_exercicios = "data/exercicios.txt"
+        self.arquivo_usuarios = "../data/usuarios.txt"
+        self.arquivo_idiomas = "../data/idiomas.txt"
+        self.arquivo_licoes = "../data/licoes.txt"
+        self.arquivo_exercicios = "../data/exercicios.txt"
+        self.carregar_indices()
 
     def carregar_indices(self):
         self._carregar_arvore(self.arquivo_usuarios, self.arvore_usuarios)

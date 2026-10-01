@@ -2,12 +2,12 @@
 Arquivo responsável pela Inclusão, Exclusão e Busca
 """
 
-from src.controllers.file_manager import FileManager
-from src.controllers.indexador import Indexador
-from src.models.usuario import Usuario
-from src.models.idioma import Idioma
-from src.models.licao import Licao
-from src.models.exercicio import Exercicio
+from controllers.file_manager import FileManager
+from controllers.indexador import Indexador
+from models.usuario import Usuario
+from models.idioma import Idioma
+from models.licao import Licao
+from models.exercicio import Exercicio
 
 class ControllerCrud:
     """
@@ -26,6 +26,15 @@ class ControllerCrud:
     def cadastrar_usuario(self, codigo: int, nome: str,
                         cod_idioma: int, nivel: int,
                         pontuacao: float):
+
+        if self.indexador.arvore_idiomas.buscar(cod_idioma) is None:
+            print("Idioma não encontrado. Cadastre o idioma antes.")
+            return
+
+        if self.indexador.arvore_usuarios.buscar(codigo) is not None:
+            print("Código já cadastrado, tente outro código!")
+            return
+        
         novo_usuario = Usuario(codigo, nome, cod_idioma, nivel, pontuacao)
 
         # 1. Salva no disco (txt) e pega a linha em que ficou
@@ -38,18 +47,50 @@ class ControllerCrud:
         print("Usuário cadastrado com sucesso!")
 
     def cadastrar_idioma(self, codigo: int, descricao: str):
+        if self.indexador.arvore_idiomas.buscar(codigo) is not None:
+            print("Idioma já cadastrado.")
+            return
+
         novo_idioma = Idioma(codigo, descricao)
         posicao = FileManager.adicionar_registro(self.indexador.arquivo_idiomas, novo_idioma.to_string())
         self.indexador.arvore_idiomas.inserir(codigo, posicao)
         print("Idioma cadastrado com sucesso!")
 
+    def listar_idioma(self):
+        nos = self.indexador.arvore_idiomas.percorrer_em_ordem()
+        if not nos:
+            print("Nenhum idioma cadastrado.")
+            return
+
+        linhas = FileManager.ler_todas_linhas(self.indexador.arquivo_idiomas)
+        for no in nos:
+            idioma = Idioma.from_string(linhas[no.posicao])
+            print(f"ID: {idioma.codigo} | Nome: {idioma.descricao}")
+        
+
     def cadastrar_licao(self, cod_licao: int, cod_idioma: int, total_niveis: int):
+        if self.indexador.arvore_licoes.buscar(cod_licao) is not None:
+            print("Lição já cadastrada.")
+            return
+
+        if self.indexador.arvore_idiomas.buscar(cod_idioma) is None:
+            print("Idioma não encontrado. Cadastre o idioma antes.")
+            return
+
         nova_licao = Licao(cod_licao, cod_idioma, total_niveis)
         posicao = FileManager.adicionar_registro(self.indexador.arquivo_licoes, nova_licao.to_string())
         self.indexador.arvore_licoes.inserir(cod_licao, posicao)
         print("Lição cadastrado com sucesso!")
 
     def cadastrar_exercicio(self, cod_exercicio: int, cod_licao: int, nivel_dificuldade: int, descricao: str, opcoes: str, resposta: str, pontuacao: float):
+        if self.indexador.arvore_exercicios.buscar(cod_exercicio) is not None:
+            print("Exercício já cadastrado.")
+            return
+
+        if self.indexador.arvore_licoes.buscar(cod_licao) is None:
+            print("Lição não encontrada. Cadastre a lição antes.")
+            return
+
         novo_exercicio = Exercicio(cod_exercicio, cod_licao, nivel_dificuldade, descricao, opcoes, resposta, pontuacao)
         posicao = FileManager.adicionar_registro(self.indexador.arquivo_exercicios, novo_exercicio.to_string())
         self.indexador.arvore_exercicios.inserir(cod_exercicio, posicao)

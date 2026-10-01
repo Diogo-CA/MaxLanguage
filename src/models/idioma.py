@@ -1,7 +1,43 @@
+from posixpath import split
 class Idioma:
-    def __init__(self, codigo: int, descricao: str):
+    TAM_STATUS = 1
+    TAM_CODIGO = 5
+    TAM_DESCRICAO = 30
+    TAM_SEPARADOR = 2
+    TAM_REGISTRO = TAM_STATUS + TAM_CODIGO + TAM_DESCRICAO + TAM_SEPARADOR + 1
+    STATUS_PADRAO = "0"
+    
+    def __init__(self, codigo: int, descricao: str,  status = STATUS_PADRAO):
         self.codigo = codigo
         self.descricao = descricao
+        self.status = status
+
+    def to_byte(self):
+        b_codigo = (str(self.codigo).zfill(self.TAM_CODIGO)).encode();
+        b_desc = (str(self.descricao).encode("utf-8")).ljust(self.TAM_DESCRICAO);
+        b_status = (str(self.status).encode())
+
+        b_banco = b_status + b";" + b_codigo + b";" + b_desc + b"\n"
+
+        if len(b_banco) != self.TAM_REGISTRO:
+            raise ValueError(f"Linha veio com {len(b_banco)} diferente de {self.TAM_REGISTRO}")
+
+        return b_banco
+
+    
+    @classmethod
+    def from_byte(cls, registro: bytes):
+        if len(registro) != cls.TAM_REGISTRO:
+            raise ValueError(f"Linha veio com {len(registro)} diferente de {cls.TAM_REGISTRO}")
+        splitStatus = [0, cls.TAM_STATUS]
+        splitCodigo = [splitStatus[1] + 1, splitStatus[1] + 1 + cls.TAM_CODIGO];
+        splitDesc = [splitCodigo[1] + 1, cls.TAM_REGISTRO - 1]
+
+        codigo = (registro[splitCodigo[0]:splitCodigo[1]].decode("utf-8")).strip()
+        desc = (registro[splitDesc[0]:splitDesc[1]].decode("utf-8")).strip()
+        status = (registro[splitStatus[0]:splitStatus[1]].decode("utf-8")).strip()
+
+        return cls(int(codigo), str(desc), str(status))
 
     def to_string(self) -> str:
         """
