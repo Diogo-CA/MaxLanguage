@@ -15,7 +15,7 @@ class FileManager:
     def garantir_arquivo_existe(caminho_arquivo: str):
         if not os.path.exists(caminho_arquivo):
             # O modo 'w' (write) cria o arquivo caso não exista
-            with open(caminho_arquivo, 'w', encoding='utf-8') as f:
+            with open(caminho_arquivo, 'ab') as f:
                 pass # Não escreve nada, apenas cria o arquivo
 
     @staticmethod
@@ -55,3 +55,35 @@ class FileManager:
         with open(caminho_arquivo, 'w', encoding='utf-8') as f:
             for linha in linhas_texto:
                 f.write(linha + "\n")
+
+    @staticmethod 
+    def contar_registros(caminho_arquivo: str, tam_registro: int):
+        FileManager.garantir_arquivo_existe(caminho_arquivo)
+        tamanho = os.path.getsize(caminho_arquivo)
+        if (tamanho % tam_registro) != 0:
+            raise ValueError(f"O arquivo tem {tamanho} bytes e não é multiplo de {tam_registro}")
+        num_registros = tamanho // tam_registro
+        return num_registros
+
+    @staticmethod
+    def anexar_registro(caminho_arquivo: str, dados: bytes, tam_registro:int):
+        posicao = FileManager.contar_registros(caminho_arquivo, tam_registro)
+        with open(caminho_arquivo, 'ab') as f:
+            f.write(dados)
+        return posicao
+    
+    @staticmethod
+    def ler_registro(caminho_arquivo: str, posicao: int, tam_registro: int):
+        FileManager.garantir_arquivo_existe(caminho_arquivo)
+        with open(caminho_arquivo, 'rb') as f:
+            f.seek(posicao * tam_registro)
+            return f.read(tam_registro)
+
+    @staticmethod
+    def escrever_registro(caminho_arquivo: str, posicao: int, dados: bytes, tam_registro: int):
+        if len(dados) == tam_registro:
+            with open(caminho_arquivo, 'r+b') as f:
+                f.seek(posicao * tam_registro)
+                f.write(dados)
+        else:
+            raise ValueError (f"Os dados estão com um tamanho diferente doque deveriam. {len(dados)} != {tam_registro}")

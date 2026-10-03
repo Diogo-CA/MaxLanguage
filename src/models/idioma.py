@@ -1,3 +1,12 @@
+import collections
+import collections
+import collections
+import collections
+import collections
+import collections
+import collections
+import collections
+import collections
 from posixpath import split
 class Idioma:
     TAM_STATUS = 1
@@ -38,6 +47,15 @@ class Idioma:
         status = (registro[splitStatus[0]:splitStatus[1]].decode("utf-8")).strip()
 
         return cls(int(codigo), str(desc), str(status))
+
+    @classmethod
+    def extrair_chave(cls, registro: bytes):
+        if len(registro) != cls.TAM_REGISTRO:
+            raise ValueError(f"Linha veio com {len(registro)} diferente de {cls.TAM_REGISTRO}")
+
+        splitCodigo = (registro[cls.TAM_STATUS + 1:cls.TAM_STATUS + 1 + cls.TAM_CODIGO].decode("utf-8")).strip();
+        
+        return int(splitCodigo)
 
     def to_string(self) -> str:
         """
