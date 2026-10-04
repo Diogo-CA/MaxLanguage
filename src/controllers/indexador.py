@@ -1,5 +1,9 @@
-from models.arvore_binaria import ArvoreBinaria
-from models.file_manager import FileManager
+import os
+from models.arquivo_indexado import ArquivoIndexado
+from models.idioma import Idioma
+from models.licao import Licao
+from models.usuario import Usuario
+from models.exercicio import Exercicio
 
 class Indexador:
     """
@@ -8,30 +12,10 @@ class Indexador:
     """
 
     def __init__(self):
-        self.arvore_usuarios = ArvoreBinaria()
-        self.arvore_idiomas = ArvoreBinaria()
-        self.arvore_licoes = ArvoreBinaria()
-        self.arvore_exercicios = ArvoreBinaria()
+        base = os.path.dirname(os.path.abspath(__file__))
+        self.idiomas = ArquivoIndexado(os.path.join(base, "..", "..", "data", "idiomas.txt"), Idioma)
+        self.licoes = ArquivoIndexado(os.path.join(base, "..", "..", "data", "licoes.txt"), Licao)
+        self.usuarios = ArquivoIndexado(os.path.join(base, "..", "..", "data", "usuarios.txt") , Usuario)
+        self.exercicios = ArquivoIndexado(os.path.join(base, "..", "..", "data", "exercicios.txt") , Exercicio)
 
-        self.arquivo_usuarios = "../data/usuarios.txt"
-        self.arquivo_idiomas = "../data/idiomas.txt"
-        self.arquivo_licoes = "../data/licoes.txt"
-        self.arquivo_exercicios = "../data/exercicios.txt"
-        self.carregar_indices()
 
-    def carregar_indices(self):
-        self._carregar_arvore(self.arquivo_usuarios, self.arvore_usuarios)
-        self._carregar_arvore(self.arquivo_idiomas, self.arvore_idiomas)
-        self._carregar_arvore(self.arquivo_licoes, self.arvore_licoes)
-        self._carregar_arvore(self.arquivo_exercicios, self.arvore_exercicios)
-
-    def _carregar_arvore(self, caminho_arquivo: str, arvore: ArvoreBinaria):
-        linhas = FileManager.ler_todas_linhas(caminho_arquivo)
-
-        for posicao, linha in enumerate(linhas):
-            partes = linha.split(";")
-
-            if len(partes) > 0 and partes[0].isdigit() and int(partes[0]) != 0:
-                codigo = int(partes[0])
-
-                arvore.inserir(codigo, posicao)

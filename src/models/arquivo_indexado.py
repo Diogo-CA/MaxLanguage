@@ -7,6 +7,7 @@ class ArquivoIndexado:
         self.caminho = caminho
         self.model = model
         self.arvore = ArvoreBinaria()
+        self._carregar_indice()
 
     def _carregar_indice(self):
         total = FileManager.contar_registros(self.caminho, self.model.TAM_REGISTRO)
