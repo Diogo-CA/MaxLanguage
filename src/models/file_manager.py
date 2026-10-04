@@ -87,3 +87,9 @@ class FileManager:
                 f.write(dados)
         else:
             raise ValueError (f"Os dados estão com um tamanho diferente doque deveriam. {len(dados)} != {tam_registro}")
+
+    @staticmethod
+    def escrever_status(caminho_arquivo: str, posicao: int, marcador: str, tam_registro: int):
+        with open(caminho_arquivo, 'r+b') as f:
+            f.seek(posicao * tam_registro)
+            f.write(marcador)

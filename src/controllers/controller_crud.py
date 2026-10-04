@@ -2,7 +2,7 @@
 Arquivo responsável pela Inclusão, Exclusão e Busca
 """
 
-from controllers.file_manager import FileManager
+from models.file_manager import FileManager
 from controllers.indexador import Indexador
 from models.usuario import Usuario
 from models.idioma import Idioma

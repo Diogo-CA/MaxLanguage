@@ -1,5 +1,5 @@
 from models.arvore_binaria import ArvoreBinaria
-from controllers.file_manager import FileManager
+from models.file_manager import FileManager
 
 class Indexador:
     """
