@@ -20,7 +20,7 @@ class Usuario:
 
     def to_byte(self):
         b_codigo = (str(self.codigo).zfill(self.TAM_CODIGO)).encode()
-        b_nome = (str(self.nome).encode("utf-8")).ljust(self.TAM_NOME);
+        b_nome = (str(self.nome).encode("utf-8"))[:self.TAM_NOME].ljust(self.TAM_NOME, b' ')
         b_cod_idioma = (str(self.cod_idioma).zfill(self.TAM_COD_IDIOMA)).encode()
         b_nivel = (str(self.nivel_atual).zfill(self.TAM_NIVEL_ATUAL)).encode()
         b_pontuacao = (str(f"{self.pontuacao_total:.1f}").zfill(self.TAM_PONTUACAO_TOTAL)).encode()
@@ -63,24 +63,3 @@ class Usuario:
         splitCodigo = (registro[cls.TAM_STATUS + 1:cls.TAM_STATUS + 1 + cls.TAM_CODIGO].decode("utf-8")).strip();
 
         return int(splitCodigo)
-
-
-    def to_string(self) -> str:
-        """
-        Retorna os dados do usuário formatados como uma string separada por ponto e vírgula.
-        """
-        return f"{self.codigo};{self.nome};{self.cod_idioma_aprendizado};{self.nivel_atual};{self.pontuacao_total}"
-
-    @classmethod
-    def from_string(cls, linha: str):
-        """
-        Cria um objeto Usuario a partir de uma linha de texto lida do arquivo.
-        """
-        partes = linha.strip().split(";")
-        return cls(
-            codigo=int(partes[0]),
-            nome=partes[1],
-            cod_idioma_aprendizado=int(partes[2]),
-            nivel_atual=int(partes[3]),
-            pontuacao_total=float(partes[4])
-        )

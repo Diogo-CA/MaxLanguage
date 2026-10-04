@@ -27,9 +27,9 @@ class Exercicio:
         b_cod_exercicio = (str(self.cod_exercicio).zfill(self.TAM_COD_EXE)).encode()
         b_cod_licao = (str(self.cod_licao).zfill(self.TAM_COD_LICAO)).encode()
         b_nivel_dificuldade = (str(self.nivel_dificuldade).zfill(self.TAM_NIVEL_DIF)).encode()
-        b_descricao = (str(self.descricao).encode("utf-8")).ljust(self.TAM_DESCRICAO)
-        b_opcoes_resposta = (str(self.opcoes_resposta).encode("utf-8")).ljust(self.TAM_OPCAO_RESPOSTA)
-        b_resposta_correta = (str(self.resposta_correta).encode("utf-8")).ljust(self.TAM_RESPOSTA_CORRETA)
+        b_descricao = (str(self.descricao).encode("utf-8"))[:self.TAM_DESCRICAO].ljust(self.TAM_DESCRICAO, b' ')
+        b_opcoes_resposta = (str(self.opcoes_resposta).encode("utf-8"))[:self.TAM_OPCAO_RESPOSTA].ljust(self.TAM_OPCAO_RESPOSTA, b' ')
+        b_resposta_correta = (str(self.resposta_correta).encode("utf-8"))[:self.TAM_RESPOSTA_CORRETA].ljust(self.TAM_RESPOSTA_CORRETA, b' ')
         b_pontuacao = (str(f"{self.pontuacao:.1f}").zfill(self.TAM_PONTUACAO)).encode()
 
         b_banco = b_status + b";" + b_cod_exercicio + b";" + b_cod_licao + b";" + b_nivel_dificuldade + b";" + b_descricao + b";" + b_opcoes_resposta + b";" + b_resposta_correta + b";" + b_pontuacao + b"\n"

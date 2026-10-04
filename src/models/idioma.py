@@ -24,7 +24,7 @@ class Idioma:
 
     def to_byte(self):
         b_codigo = (str(self.codigo).zfill(self.TAM_CODIGO)).encode();
-        b_desc = (str(self.descricao).encode("utf-8")).ljust(self.TAM_DESCRICAO);
+        b_desc = (str(self.descricao).encode("utf-8"))[:self.TAM_DESCRICAO].ljust(self.TAM_DESCRICAO, b' ')
         b_status = (str(self.status).encode())
 
         b_banco = b_status + b";" + b_codigo + b";" + b_desc + b"\n"

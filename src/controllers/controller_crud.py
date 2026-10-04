@@ -2,7 +2,6 @@
 Arquivo responsável pela Inclusão, Exclusão e Busca
 """
 
-from models.file_manager import FileManager
 from controllers.indexador import Indexador
 from models.usuario import Usuario
 from models.idioma import Idioma
@@ -27,74 +26,65 @@ class ControllerCrud:
                         cod_idioma: int, nivel: int,
                         pontuacao: float):
 
-        if self.indexador.arvore_idiomas.buscar(cod_idioma) is None:
+        if self.indexador.idiomas.buscar(cod_idioma) is None:
             print("Idioma não encontrado. Cadastre o idioma antes.")
-            return
-
-        if self.indexador.arvore_usuarios.buscar(codigo) is not None:
-            print("Código já cadastrado, tente outro código!")
             return
         
         novo_usuario = Usuario(codigo, nome, cod_idioma, nivel, pontuacao)
 
-        # 1. Salva no disco (txt) e pega a linha em que ficou
-        posicao_salva = FileManager.adicionar_registro(
-            self.indexador.arquivo_usuarios,
-            novo_usuario.to_string()
-        )
-        # 2. Insere na árvore (RAM) para pesquisas futuras
-        self.indexador.arvore_usuarios.inserir(codigo, posicao_salva)
-        print("Usuário cadastrado com sucesso!")
+        if self.indexador.usuarios.inserir(novo_usuario):
+            print("Usuário cadastrado com sucesso!")
+        else:
+            print("Código já cadastrado, tente outro código!")
+    
+    def listar_usuario(self):
+        usuarios = self.indexador.usuarios.listar_todos()
+        if not usuarios:
+            print("Nenhum usuario cadastrado")
+            return
+        
+        for usuario in usuarios:
+            print(f"ID: {usuario.codigo} | Nome: {usuario.nome}")
 
     def cadastrar_idioma(self, codigo: int, descricao: str):
-        if self.indexador.arvore_idiomas.buscar(codigo) is not None:
-            print("Idioma já cadastrado.")
-            return
-
         novo_idioma = Idioma(codigo, descricao)
-        posicao = FileManager.adicionar_registro(self.indexador.arquivo_idiomas, novo_idioma.to_string())
-        self.indexador.arvore_idiomas.inserir(codigo, posicao)
-        print("Idioma cadastrado com sucesso!")
+        if self.indexador.idiomas.inserir(novo_idioma):
+            print("Idioma cadastrado com sucesso!")
+        else:
+            print("Idioma já cadastrado.")
+    
 
     def listar_idioma(self):
-        nos = self.indexador.arvore_idiomas.percorrer_em_ordem()
-        if not nos:
+        idiomas = self.indexador.idiomas.listar_todos()
+        if not idiomas:
             print("Nenhum idioma cadastrado.")
             return
 
-        linhas = FileManager.ler_todas_linhas(self.indexador.arquivo_idiomas)
-        for no in nos:
-            idioma = Idioma.from_string(linhas[no.posicao])
+        for idioma in idiomas:
             print(f"ID: {idioma.codigo} | Nome: {idioma.descricao}")
-        
+    
 
     def cadastrar_licao(self, cod_licao: int, cod_idioma: int, total_niveis: int):
-        if self.indexador.arvore_licoes.buscar(cod_licao) is not None:
-            print("Lição já cadastrada.")
-            return
-
-        if self.indexador.arvore_idiomas.buscar(cod_idioma) is None:
+        if self.indexador.idiomas.buscar(cod_idioma) is None:
             print("Idioma não encontrado. Cadastre o idioma antes.")
             return
 
         nova_licao = Licao(cod_licao, cod_idioma, total_niveis)
-        posicao = FileManager.adicionar_registro(self.indexador.arquivo_licoes, nova_licao.to_string())
-        self.indexador.arvore_licoes.inserir(cod_licao, posicao)
-        print("Lição cadastrado com sucesso!")
+        if self.indexador.licoes.inserir(nova_licao):
+            print("Lição cadastrado com sucesso!")
+        else:
+            print("Lição já cadastrada.")
 
     def cadastrar_exercicio(self, cod_exercicio: int, cod_licao: int, nivel_dificuldade: int, descricao: str, opcoes: str, resposta: str, pontuacao: float):
-        if self.indexador.arvore_exercicios.buscar(cod_exercicio) is not None:
-            print("Exercício já cadastrado.")
-            return
-
-        if self.indexador.arvore_licoes.buscar(cod_licao) is None:
+        if self.indexador.licoes.buscar(cod_licao) is None:
             print("Lição não encontrada. Cadastre a lição antes.")
             return
 
         novo_exercicio = Exercicio(cod_exercicio, cod_licao, nivel_dificuldade, descricao, opcoes, resposta, pontuacao)
-        posicao = FileManager.adicionar_registro(self.indexador.arquivo_exercicios, novo_exercicio.to_string())
-        self.indexador.arvore_exercicios.inserir(cod_exercicio, posicao)
-        print("Exercício cadastrado com sucesso!")
+        if self.indexador.exercicios.inserir(novo_exercicio):
+            print("Exercício cadastrado com sucesso!")
+        else:
+            print("Exercício já cadastrado.")
 
     """ 
     ==============================
@@ -102,81 +92,68 @@ class ControllerCrud:
     ==============================
     """
     def buscar_usuario_com_idioma(self, codigo_usuario: int):
-        # 1. Busca rápida na árvore de usuários
-        no_usuario = self.indexador.arvore_usuarios.buscar(codigo_usuario)
+        usuario = self.indexador.usuarios.buscar(codigo_usuario)
 
-        if no_usuario is None:
+        if usuario is None:
             print("Usuário não encontrado.")
             return
 
-        # 2. Lê a linha exata no TXT e recria o objeto Usuário
-        linhas_usuario = FileManager.ler_todas_linhas(self.indexador.arquivo_usuarios)
-        usuario = Usuario.from_string(linhas_usuario[no_usuario.posicao])
-
-        # 3. Buscamos a desc do IDIOMA na outra árvore usando a FK do Usuário
-        no_idioma = self.indexador.arvore_idiomas.buscar(usuario.cod_idioma_aprendizado)
+        idioma = self.indexador.idiomas.buscar(usuario.cod_idioma)
         descricao_idioma = "Idioma Desconhecido (ID Inválido)"
 
-        if no_idioma is not None:
-            linhas_idiomas = FileManager.ler_todas_linhas(self.indexador.arquivo_idiomas)
-            idioma = Idioma.from_string(linhas_idiomas[no_idioma.posicao])
+        if idioma is not None:
             descricao_idioma = idioma.descricao
 
         print(f"[{usuario.codigo}] {usuario.nome} - Nível: {usuario.nivel_atual} | Idioma: {descricao_idioma}")
 
     def buscar_licao_com_idioma(self, cod_licao: int):
         # Requisito 2: Ao informar lição, exibir a descricao do idioma
-        no_licao = self.indexador.arvore_licoes.buscar(cod_licao)
-        if no_licao is None:
+        licao = self.indexador.licoes.buscar(cod_licao)
+        if licao is None:
             print("Lição não encontrada.")
             return
 
-        linhas_licoes = FileManager.ler_todas_linhas(self.indexador.arquivo_licoes)
-        licao = Licao.from_string(linhas_licoes[no_licao.posicao])
-
-        # Busca o idioma usando a FK (cod_idioma) da Lição
-        no_idioma = self.indexador.arvore_idiomas.buscar(licao.cod_idioma)
+        idioma = self.indexador.idiomas.buscar(licao.cod_idioma)
         descricao_idioma = "Desconhecido"
-        if no_idioma is not None:
-            linhas_idiomas = FileManager.ler_todas_linhas(self.indexador.arquivo_idiomas)
-            descricao_idioma = Idioma.from_string(linhas_idiomas[no_idioma.posicao]).descricao
-
-            print(f"Lição [{licao.cod_licao}] - Total de Níveis: {licao.total_niveis} | Idioma: {descricao_idioma}")
+        if idioma is not None:
+            descricao_idioma = idioma.descricao
         else:
-            print("Idioma não encontrado.")
+            print("Idioma não encontrado.") 
+        print(f"Lição [{licao.cod_licao}] - Total de Níveis: {licao.total_niveis} | Idioma: {descricao_idioma}")
 
     def buscar_exercicio_com_idioma(self, cod_exercicio: int):
         # Requisito 3: Ao informar o Exercício, mostrar o idioma
-        no_ex = self.indexador.arvore_exercicios.buscar(cod_exercicio)
-        if no_ex is None:
+        exercicio = self.indexador.exercicios.buscar(cod_exercicio)
+        if exercicio is None:
             print("Exercício não encontrado.")
             return
 
-        linhas_ex = FileManager.ler_todas_linhas(self.indexador.arquivo_exercicios)
-        exercicio = Exercicio.from_string(linhas_ex[no_ex.posicao])
-
-        # 1˚ Relacionamento: Pega a lição
-        no_licao = self.indexador.arvore_licoes.buscar(exercicio.cod_licao)
+        licao = self.indexador.licoes.buscar(exercicio.cod_licao)
         descricao_idioma = "Desconhecido"
 
-        if no_licao is None:
+        if licao is None:
             print("Lição não encontrada")
             return
 
-        linhas_licoes = FileManager.ler_todas_linhas(self.indexador.arquivo_licoes)
-        licao = Licao.from_string(linhas_licoes[no_licao.posicao])
-
-        # 2˚ Relacionamento: Pega o Idioma a partir da Lição
-        no_idioma = self.indexador.arvore_idiomas.buscar(licao.cod_idioma)
-        if no_idioma is None:
+        idioma = self.indexador.idiomas.buscar(licao.cod_idioma)
+        if idioma is None:
             print("Idioma não encontrado")
             return
 
-        linhas_idiomas = FileManager.ler_todas_linhas(self.indexador.arquivo_idiomas)
-        descricao_idioma = Idioma.from_string(linhas_idiomas[no_idioma.posicao]).descricao
+        descricao_idioma = idioma.descricao
 
         print(f"Exercício [{exercicio.cod_exercicio}] - {exercicio.descricao}")
         print(f"Dificuldade: Nível {exercicio.nivel_dificuldade} | Idioma: {descricao_idioma}")
+
+    def buscar_idioma(self, codigo : int):
+        idioma = self.indexador.idiomas.buscar(codigo)
+        if idioma is None:
+            print("Idioma não encontrado")
+            return
+        print(f"Codigo: {idioma.codigo} | Descrição: {idioma.descricao}")
+    
+
+
     
     """
     ==============================
@@ -184,22 +161,10 @@ class ControllerCrud:
     ==============================
     """
     def excluir_usuario(self, codigo_usuario: int):
-        # Exclusão lógica no disco e remoção do nó da memória
-        no = self.indexador.arvore_usuarios.buscar(codigo_usuario)
-        if no is None:
+        if self.indexador.usuarios.excluir(codigo_usuario):
+            print("Usuário excluido com sucesso!")
+        else:
             print("Usuário não existe para ser excluído")
-            return
-
-        # 1. Exclusão Lógica no Arquivo (Substituir dados por 0)
-        linhas = FileManager.ler_todas_linhas(self.indexador.arquivo_usuarios)
-
-        # Mantém a linha 'excluída' para não quebrar na contagem das posições
-        linhas[no.posicao] = "0;EXCLUIDO;0;0;0.0"
-        FileManager.reescrever_arquivo(self.indexador.arquivo_usuarios, linhas)
-
-        # 2. Exclusão na Árvore (Remove da RAM)
-        self.indexador.arvore_usuarios.excluir(codigo_usuario)
-        print("Usuário excluido com sucesso!")
 
 
 
