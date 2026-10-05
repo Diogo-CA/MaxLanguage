@@ -4,10 +4,13 @@ from controllers.controller_pratica import ControllerPratica
 from controllers.controller_ranking import ControllerRanking
 from controllers.controller_certif import ControllerCertif
 
-def ler_inteiro(mensagem: str) -> int:
+def ler_inteiro(mensagem: str, minimo: int = 0, maximo: int = 99999) -> int:
     while True:
         try:
-            return int(input(mensagem))
+            valor = int(input(mensagem))
+            if minimo <= valor <= maximo:
+                return valor
+            print(f"Digite um valor entre {minimo} e {maximo}.")
         except ValueError:
             print("Entrada inválida! Digite apenas números inteiros.")
 
