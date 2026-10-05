@@ -1,6 +1,7 @@
 from models.file_manager import FileManager
 from models.arvore_binaria import ArvoreBinaria
 
+
 class ArquivoIndexado:
     STATUS_EXCLUIDO = "*".encode()
     def __init__(self, caminho: str, model: type):

@@ -1,5 +1,6 @@
 from controllers.controller_crud import ControllerCrud
 from controllers.indexador import Indexador
+from controllers.controller_pratica import ControllerPratica
 
 def ler_inteiro(mensagem: str) -> int:
     while True:
@@ -18,11 +19,13 @@ def ler_float(mensagem: str) -> float:
 def main():
     idx = Indexador()
     crud = ControllerCrud(idx)
+    pratica = ControllerPratica(idx)
     while True:
         print("1 - Inserir")
         print("2 - Buscar")
         print("3 - Remover")
-        print("4 - Sair")
+        print("4 - Praticar")
+        print("5 - Sair")
         opcao = input("Digite uma opcao: ")
         if opcao == "1":
             print("1- Cadastrar idioma")
@@ -47,8 +50,12 @@ def main():
                 total_niveis = ler_inteiro("Digite o total de níveis: ")
                 crud.cadastrar_licao(cod_licao, cod_idioma, total_niveis)
             elif opcao2 == "4":
-                cod_exercicio = ler_inteiro("Digite o codigo do exercício: ")
+                crud.listar_idioma()
+                cod_idioma = ler_inteiro("Digite o codigo do idioma: ")
+                if not crud.listar_licao_do_idioma(cod_idioma):
+                    continue
                 cod_licao = ler_inteiro("Digite o codigo da lição: ")
+                cod_exercicio = ler_inteiro("Digite o codigo do exercício: ")
                 nivel_dificuldade = ler_inteiro("Digite o nível de dificuldade: ")
                 descricao = input("Digite a descrição (enunciado): ")
                 opcoes = input("Digite as opções de resposta (ex: a) ... b) ...): ")
@@ -83,6 +90,63 @@ def main():
                 cod = ler_inteiro("Qual usuario você quer remover? ")
                 crud.excluir_usuario(cod)
         elif opcao == "4":
+            crud.listar_usuario()
+            cod_usuario = ler_inteiro("Digite o codigo do usuario: ")
+            
+            while True:
+                if pratica.concluiu(cod_usuario):
+                    print("Você já concluiu este idioma!")
+                    break
+                
+                lista_exercicios = pratica.exercicios_disponiveis(cod_usuario)
+                if not lista_exercicios:
+                    print("Nenhum exercício disponível para o seu nível.")
+                    break
+                
+                print("\nExercícios disponíveis:")
+                for ex in lista_exercicios:
+                    print(f"[{ex.cod_exercicio}] Nível: {ex.nivel_dificuldade} - {ex.descricao}")
+                
+                cod_escolhido = ler_inteiro("\nDigite o codigo do exercício escolhido: ")
+                
+                ex_escolhido = None
+                for e in lista_exercicios:
+                    if e.cod_exercicio == cod_escolhido:
+                        ex_escolhido = e
+                        break
+                
+                if ex_escolhido is None:
+                    print("Exercício não encontrado ou indisponível.")
+                    continue
+                
+                print(f"\nEnunciado: {ex_escolhido.descricao}")
+                print(f"Opções: {ex_escolhido.opcoes_resposta}")
+                resposta = input("Sua resposta: ")
+                
+                resultado = pratica.responder(cod_usuario, cod_escolhido, resposta)
+                
+                if resultado is False:
+                    print("Não foi possível praticar.")
+                else:
+                    if resultado["Acertou"]:
+                        print("Correto!")
+                    else:
+                        print(f"Errado! A resposta correta era {ex_escolhido.resposta_correta}.")
+                    
+                    sinal = "+" if resultado["Pontos"] > 0 else ""
+                    print(f"{sinal}{resultado['Pontos']} pontos")
+                    print(f"Pontuação total: {resultado['total']}")
+                    
+                    if resultado["promoveu"]:
+                        print(f"Parabéns! Você subiu para o nível {resultado['nivel']}.")
+                    
+                    if resultado["Concluiu"]:
+                        print("Você concluiu o idioma! Certificado disponível.")
+                
+                continuar = input("\nPraticar outro? (s/n): ")
+                if continuar.strip().lower() != 's':
+                    break
+        elif opcao == "5":
             break
         else:
             print("Opcao invalida!")

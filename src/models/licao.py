@@ -50,17 +50,3 @@ class Licao:
         splitCodigo = (registro[cls.TAM_STATUS + 1:cls.TAM_STATUS + 1 + cls.TAM_COD_LICAO].decode("utf-8")).strip();
 
         return int(splitCodigo)
-
-    def to_string(self) -> str:
-        """
-        Retorna os dados da lição formatados como uma string separada por ponto e vírgula.
-        """
-        return f"{self.cod_licao};{self.cod_idioma};{self.total_niveis}"
-
-    @classmethod
-    def from_string(cls, linha: str):
-        """
-        Cria um objeto Licao a partir de uma linha de texto lida do arquivo.
-        """
-        partes = linha.strip().split(";")
-        return cls(int(partes[0]), int(partes[1]), int(partes[2]))

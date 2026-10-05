@@ -74,6 +74,24 @@ class ControllerCrud:
             print("Lição cadastrado com sucesso!")
         else:
             print("Lição já cadastrada.")
+    
+    def listar_licao_do_idioma(self, cod_idioma: int):
+        licoes = self.indexador.licoes.listar_todos()
+        if not licoes:
+            print("Nenhuma lição cadastrada para este idioma.")
+            return False
+        
+        encontrou = False
+        for licao in licoes:
+            if licao.cod_idioma == cod_idioma:
+                print(f"Lição [{licao.cod_licao}] - Total de Níveis: {licao.total_niveis}")
+                encontrou = True
+        
+        if not encontrou:
+            print("Nenhuma lição cadastrada para este idioma.")
+            return False
+            
+        return True
 
     def cadastrar_exercicio(self, cod_exercicio: int, cod_licao: int, nivel_dificuldade: int, descricao: str, opcoes: str, resposta: str, pontuacao: float):
         if self.indexador.licoes.buscar(cod_licao) is None:
