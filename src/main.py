@@ -1,6 +1,8 @@
 from controllers.controller_crud import ControllerCrud
 from controllers.indexador import Indexador
 from controllers.controller_pratica import ControllerPratica
+from controllers.controller_ranking import ControllerRanking
+from controllers.controller_certif import ControllerCertif
 
 def ler_inteiro(mensagem: str) -> int:
     while True:
@@ -20,12 +22,16 @@ def main():
     idx = Indexador()
     crud = ControllerCrud(idx)
     pratica = ControllerPratica(idx)
+    ranking = ControllerRanking(idx)
+    certif = ControllerCertif(idx, pratica)
     while True:
         print("1 - Inserir")
         print("2 - Buscar")
         print("3 - Remover")
         print("4 - Praticar")
-        print("5 - Sair")
+        print("5 - Ranking")
+        print("6 - Emitir Certificado")
+        print("7 - Sair")
         opcao = input("Digite uma opcao: ")
         if opcao == "1":
             print("1- Cadastrar idioma")
@@ -147,6 +153,12 @@ def main():
                 if continuar.strip().lower() != 's':
                     break
         elif opcao == "5":
+            ranking.exibir_ranking()
+        elif opcao == "6":
+            crud.listar_usuario()
+            cod_usuario = ler_inteiro("\nDigite o codigo do usuario: ")
+            certif.emitir_certificado(cod_usuario)
+        elif opcao == "7":
             break
         else:
             print("Opcao invalida!")
