@@ -6,6 +6,7 @@ class TelaPraticar(ctk.CTkFrame):
     """
     Interface de Aprendizado Guiado & Progressivo (Inspirada no Duolingo).
     O aluno avança passo a passo de forma linear através dos exercícios da sua trilha.
+    Detecta promoções de nível e exibe ações inteligentes de transição.
     """
     def __init__(self, master, crud, pratica):
         super().__init__(master, fg_color="transparent")
@@ -19,6 +20,7 @@ class TelaPraticar(ctk.CTkFrame):
         self.botoes_opcoes = []
         self.em_modo_feedback = False
         self.pontos_sessao = 0.0
+        self.nivel_inicio_sessao = 1
 
         self._construir_interface()
         self.atualizar()
@@ -84,8 +86,10 @@ class TelaPraticar(ctk.CTkFrame):
         self.card_vitoria = ctk.CTkFrame(self.container_dinamico, fg_color=tema.BRANCO_CARD, corner_radius=18,
                                         border_width=2, border_color=tema.VERDE_GAMIFIED)
         
-        ctk.CTkLabel(self.card_vitoria, text="🎉", font=("Helvetica", 48)).pack(pady=(24, 6))
-        self.lbl_vitoria_titulo = ctk.CTkLabel(self.card_vitoria, text="Rodada Concluída com Sucesso!",
+        self.lbl_vitoria_icone = ctk.CTkLabel(self.card_vitoria, text="🎉", font=("Helvetica", 48))
+        self.lbl_vitoria_icone.pack(pady=(24, 6))
+
+        self.lbl_vitoria_titulo = ctk.CTkLabel(self.card_vitoria, text="Rodada Concluída!",
                                                font=tema.FONTE_TITULO, text_color=tema.TEXTO_ESCURO)
         self.lbl_vitoria_titulo.pack(pady=(0, 8))
 
@@ -93,11 +97,11 @@ class TelaPraticar(ctk.CTkFrame):
                                                   text_color=tema.TEXTO_MUTED, wraplength=600, justify="center")
         self.lbl_vitoria_subtitulo.pack(pady=(0, 20))
 
-        self.btn_reiniciar_rodada = ctk.CTkButton(self.card_vitoria, text="🔄 Praticar Novamente",
-                                                  font=tema.FONTE_TEXTO_BOLD, height=44, width=220,
-                                                  fg_color=tema.AZUL_ACCENT, hover_color=tema.AZUL_NAVY_HOVER,
-                                                  command=self._reiniciar_sessao)
-        self.btn_reiniciar_rodada.pack(pady=(0, 24))
+        self.btn_acao_vitoria = ctk.CTkButton(self.card_vitoria, text="Continuar ➔",
+                                              font=tema.FONTE_TEXTO_BOLD, height=44, width=280,
+                                              fg_color=tema.VERDE_GAMIFIED, hover_color=tema.VERDE_HOVER,
+                                              command=self._ao_clicar_acao_vitoria)
+        self.btn_acao_vitoria.pack(pady=(0, 24))
 
         # 3. Rodapé de Ação e Feedback (Fixo na parte inferior)
         self.card_rodape = ctk.CTkFrame(self, fg_color=tema.BRANCO_CARD, corner_radius=16,
@@ -148,17 +152,22 @@ class TelaPraticar(ctk.CTkFrame):
         usuario = dados_usuario["usuario"]
         idioma = dados_usuario["descricao_idioma"]
         self.lbl_trilha_info.configure(text=f"Trilha de {idioma} • Nível {usuario.nivel_atual}")
+        self.nivel_inicio_sessao = usuario.nivel_atual
 
         if self.pratica.concluiu(usuario.codigo):
             self._mostrar_card_vitoria(
-                titulo="🎓 Certificado de Proficiência Disponível!",
-                subtitulo=f"Parabéns {usuario.nome}! Você alcançou todos os níveis de {idioma}. "
-                          f"Acesse a aba 'Meu Certificado' para emitir seu diploma oficial!"
+                icone="🎓",
+                titulo="Parabéns! Curso Concluído!",
+                subtitulo=f"Você alcançou todos os níveis de {idioma} com {usuario.pontuacao_total:.1f} XP acumulados.\n"
+                          f"Seu Certificado Oficial de Proficiência já está disponível!",
+                texto_botao="📜 Abrir Meu Certificado ➔",
+                cor_botao=tema.VERDE_GAMIFIED,
+                acao_destino="CERTIFICADO"
             )
             return
 
-        # Carregar exercícios compatíveis (Req. 5.1: Nível_Dificuldade <= Nível_Atual)
-        exercicios = self.pratica.exercicios_disponiveis(usuario.codigo)
+        # Carregar exercícios da fase atual (Req. 5.1: Nível_Dificuldade == Nível_Atual)
+        exercicios = self.pratica.exercicios_disponiveis(usuario.codigo, apenas_nivel_atual=True)
         self.fila_exercicios = exercicios
 
         if not self.fila_exercicios:
@@ -181,17 +190,25 @@ class TelaPraticar(ctk.CTkFrame):
         self.card_quiz.pack(fill="both", expand=True)
         self.card_rodape.pack(fill="x", pady=(0, 4), padx=2)
 
-    def _mostrar_card_vitoria(self, titulo: str, subtitulo: str):
+    def _mostrar_card_vitoria(self, icone: str, titulo: str, subtitulo: str, texto_botao: str, cor_botao: str, acao_destino: str):
         self.card_quiz.pack_forget()
         self.card_rodape.pack_forget()
+        self.lbl_vitoria_icone.configure(text=icone)
         self.lbl_vitoria_titulo.configure(text=titulo)
         self.lbl_vitoria_subtitulo.configure(text=subtitulo)
+        self.btn_acao_vitoria.configure(text=texto_botao, fg_color=cor_botao, hover_color=tema.VERDE_HOVER if cor_botao == tema.VERDE_GAMIFIED else tema.AZUL_NAVY_HOVER)
+        self.destino_vitoria = acao_destino
         self.card_vitoria.pack(fill="both", expand=True, padx=2, pady=10)
 
-    def _reiniciar_sessao(self):
-        self.indice_atual = 0
-        self.pontos_sessao = 0.0
-        self.atualizar()
+    def _ao_clicar_acao_vitoria(self):
+        if getattr(self, "destino_vitoria", "REINICIAR") == "CERTIFICADO":
+            master_app = self.winfo_toplevel()
+            if hasattr(master_app, "mostrar"):
+                master_app.mostrar("Meu Certificado")
+        else:
+            self.indice_atual = 0
+            self.pontos_sessao = 0.0
+            self.atualizar()
 
     def _limpar_opcoes(self):
         for btn in self.botoes_opcoes:
@@ -257,7 +274,7 @@ class TelaPraticar(ctk.CTkFrame):
 
     def _selecionar_opcao(self, letra):
         if self.em_modo_feedback:
-            return  # Não permite mudar a opção enquanto vê o feedback
+            return
         
         self.resposta_selecionada = letra
         self.btn_acao_principal.configure(state="normal")
@@ -272,10 +289,8 @@ class TelaPraticar(ctk.CTkFrame):
 
     def _ao_clicar_botao_principal(self):
         if not self.em_modo_feedback:
-            # 1. Modo Verificar Resposta
             self._verificar_resposta()
         else:
-            # 2. Modo Continuar para a Próxima Etapa
             self._avancar_proxima_etapa()
 
     def _verificar_resposta(self):
@@ -289,7 +304,6 @@ class TelaPraticar(ctk.CTkFrame):
         if not resposta:
             return
 
-        # Executa a regra no controller
         resultado = self.pratica.responder(usuario.codigo, self.exercicio_atual.cod_exercicio, resposta)
         if resultado is False:
             return
@@ -301,12 +315,19 @@ class TelaPraticar(ctk.CTkFrame):
         if hasattr(master_app, "atualizar_header_usuario"):
             master_app.atualizar_header_usuario()
 
+        # Atualiza a label de nível no topo imediatamente se foi promovido
+        dados_atualizados = self._obter_usuario_ativo()
+        if dados_atualizados:
+            u_atual = dados_atualizados["usuario"]
+            idioma = dados_atualizados["descricao_idioma"]
+            self.lbl_trilha_info.configure(text=f"Trilha de {idioma} • Nível {u_atual.nivel_atual}")
+
         # Configura o visual de Feedback
         if resultado["Acertou"]:
             self.pontos_sessao += resultado["Pontos"]
             msg = f"🎉 Excelente! Resposta Correta (+{resultado['Pontos']:.1f} XP)"
             if resultado["promoveu"]:
-                msg += f" • ⭐ Subiu para o NÍVEL {resultado['nivel']}!"
+                msg += f" • ⭐ SUBIU PARA O NÍVEL {resultado['nivel']}!"
             
             self.lbl_feedback.configure(text=msg, text_color=tema.VERDE_GAMIFIED)
             self.card_rodape.configure(fg_color=tema.VERDE_BG, border_color=tema.VERDE_GAMIFIED)
@@ -320,23 +341,56 @@ class TelaPraticar(ctk.CTkFrame):
     def _avancar_proxima_etapa(self):
         self.indice_atual += 1
 
-        # Verifica se finalizou a lista de exercícios
+        dados_usuario = self._obter_usuario_ativo()
+        usuario = dados_usuario["usuario"] if dados_usuario else None
+
+        # 1. Se concluiu todo o curso do idioma
+        if usuario and self.pratica.concluiu(usuario.codigo):
+            idioma = dados_usuario["descricao_idioma"]
+            self._mostrar_card_vitoria(
+                icone="🎓",
+                titulo="PARABÉNS! CURSO CONCLUÍDO!",
+                subtitulo=f"Você completou com sucesso todos os níveis de {idioma} com {usuario.pontuacao_total:.1f} XP acumulados!\n"
+                          f"Seu Certificado de Proficiência já pode ser emitido.",
+                texto_botao="📜 Abrir Meu Certificado ➔",
+                cor_botao=tema.VERDE_GAMIFIED,
+                acao_destino="CERTIFICADO"
+            )
+            self.barra_etapas.set(1.0)
+            self.lbl_etapa_contador.configure(text="Concluído ✔")
+            return
+
+        # 2. Se finalizou a fila de exercícios da rodada
         if self.indice_atual >= len(self.fila_exercicios):
-            dados_usuario = self._obter_usuario_ativo()
-            usuario = dados_usuario["usuario"] if dados_usuario else None
+            idioma = dados_usuario["descricao_idioma"] if dados_usuario else "Idioma"
             
-            if usuario and self.pratica.concluiu(usuario.codigo):
+            foi_promovido = usuario and (usuario.nivel_atual > self.nivel_inicio_sessao)
+
+            if foi_promovido:
+                # Aluno promovido para um novo nível durante esta rodada!
                 self._mostrar_card_vitoria(
-                    titulo="🎓 Parabéns! Curso Concluído!",
-                    subtitulo=f"Você completou todas as lições com {usuario.pontuacao_total:.1f} XP acumulados. "
-                              f"Seu Certificado de Proficiência já pode ser emitido na aba correspondente!"
+                    icone="⭐",
+                    titulo=f"PARABÉNS! VOCÊ DESBLOQUEOU O NÍVEL {usuario.nivel_atual}!",
+                    subtitulo=f"Você acumulou {usuario.pontuacao_total:.1f} XP e completou a etapa anterior!\n"
+                              f"Prepare-se para os novos desafios do Nível {usuario.nivel_atual} de {idioma}.",
+                    texto_botao=f"🚀 Continuar para o Nível {usuario.nivel_atual} ➔",
+                    cor_botao=tema.VERDE_GAMIFIED,
+                    acao_destino="PROXIMO_NIVEL"
                 )
             else:
+                # Aluno terminou a rodada mas ainda não atingiu a pontuação para subir
+                meta = 100 * usuario.nivel_atual if usuario else 100
+                restam = max(0.0, meta - usuario.pontuacao_total) if usuario else 0
                 self._mostrar_card_vitoria(
-                    titulo="🎉 Rodada Concluída com Sucesso!",
-                    subtitulo=f"Você respondeu todos os desafios disponíveis para o seu nível! "
-                              f"Continue praticando para subir de nível e desbloquear novos conteúdos."
+                    icone="🎉",
+                    titulo="Rodada Concluída com Sucesso!",
+                    subtitulo=f"Você respondeu todos os exercícios desta rodada! Faltam {restam:.1f} XP para alcançar o Nível {usuario.nivel_atual + 1}.\n"
+                              f"Continue praticando para atingir a meta e ser promovido!",
+                    texto_botao="🔄 Praticar Novamente ➔",
+                    cor_botao=tema.AZUL_ACCENT,
+                    acao_destino="REINICIAR"
                 )
+            
             self.barra_etapas.set(1.0)
             self.lbl_etapa_contador.configure(text=f"Concluído ({len(self.fila_exercicios)}/{len(self.fila_exercicios)})")
         else:
