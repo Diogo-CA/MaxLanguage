@@ -47,7 +47,7 @@ class Usuario:
         splitPontuacao = [splitNivel[1] + 1, splitNivel[1] + 1 + cls.TAM_PONTUACAO_TOTAL]
 
         codigo = (registro[splitCodigo[0]:splitCodigo[1]].decode("utf-8")).strip()
-        nome = (registro[splitNome[0]:splitNome[1]].decode("utf-8").strip())
+        nome = (registro[splitNome[0]:splitNome[1]].decode("utf-8", errors="ignore").strip())
         codigo_idioma = (registro[splitCod_idioma[0]:splitCod_idioma[1]].decode("utf-8")).strip()
         nivel = (registro[splitNivel[0]:splitNivel[1]].decode("utf-8").strip())
         pontuacao = (registro[splitPontuacao[0]:splitPontuacao[1]].decode("utf-8")).strip()

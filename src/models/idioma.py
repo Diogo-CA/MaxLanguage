@@ -44,7 +44,7 @@ class Idioma:
         splitDesc = [splitCodigo[1] + 1, cls.TAM_REGISTRO - 1]
 
         codigo = (registro[splitCodigo[0]:splitCodigo[1]].decode("utf-8")).strip()
-        desc = (registro[splitDesc[0]:splitDesc[1]].decode("utf-8")).strip()
+        desc = (registro[splitDesc[0]:splitDesc[1]].decode("utf-8", errors="ignore")).strip()
         status = (registro[splitStatus[0]:splitStatus[1]].decode("utf-8")).strip()
 
         return cls(int(codigo), str(desc), str(status))

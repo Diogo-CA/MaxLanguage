@@ -58,8 +58,8 @@ class Exercicio:
         cod_exercicio = (registro[splitCod_exercicio[0]:splitCod_exercicio[1]].decode("utf-8")).strip()
         cod_licao = (registro[splitCod_licao[0]:splitCod_licao[1]].decode("utf-8")).strip()
         nivel_dificuldade = (registro[splitNivel_dificuldade[0]:splitNivel_dificuldade[1]].decode("utf-8")).strip()
-        descricao = (registro[splitDescricao[0]:splitDescricao[1]].decode("utf-8")).strip()
-        opcoes_resposta = (registro[splitOpcoes_resposta[0]:splitOpcoes_resposta[1]].decode("utf-8")).strip()
+        descricao = (registro[splitDescricao[0]:splitDescricao[1]].decode("utf-8", errors="ignore")).strip()
+        opcoes_resposta = (registro[splitOpcoes_resposta[0]:splitOpcoes_resposta[1]].decode("utf-8", errors="ignore")).strip()
         resposta_correta = (registro[splitResposta_correta[0]:splitResposta_correta[1]].decode("utf-8")).strip()
         pontuacao = (registro[splitPontuacao[0]:splitPontuacao[1]].decode("utf-8")).strip()
 
