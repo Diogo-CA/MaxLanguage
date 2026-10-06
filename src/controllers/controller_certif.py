@@ -9,14 +9,16 @@ class ControllerCertif:
         self.pratica = pratica
 
     def emitir_certificado(self, cod_usuario: int):
+        """
+        Requisito 8. Retorna (True, caminho_do_arquivo) se o certificado foi gerado
+        ou (False, mensagem_de_erro).
+        """
         usuario = self.indexador.usuarios.buscar(cod_usuario)
         if usuario is None:
-            print("Usuário não encontrado.")
-            return
+            return False, "Usuário não encontrado."
 
         if not self.pratica.concluiu(cod_usuario):
-            print("O usuário ainda não concluiu este idioma. Continue praticando!")
-            return
+            return False, "O usuário ainda não concluiu este idioma. Continue praticando!"
 
         idioma = self.indexador.idiomas.buscar(usuario.cod_idioma)
         nome_idioma = idioma.descricao if idioma else "Idioma Desconhecido"
@@ -70,7 +72,6 @@ class ControllerCertif:
         try:
             with open(caminho_absoluto, 'w', encoding='utf-8') as f:
                 f.write(html)
-            print(f"Certificado gerado com sucesso!")
-            print(f"Salvo em: {caminho_absoluto}")
+            return True, caminho_absoluto
         except Exception as e:
-            print(f"Erro ao salvar certificado: {e}")
+            return False, f"Erro ao salvar certificado: {e}"

@@ -68,7 +68,7 @@ class ControllerPratica:
             pontos = exercicio.pontuacao
             usuario.pontuacao_total += exercicio.pontuacao
         else:
-            pontos = -(exercicio.pontuacao * 0.1)
+            pontos = -round(exercicio.pontuacao * 0.1, 1)
             usuario.pontuacao_total = max(0, usuario.pontuacao_total - (exercicio.pontuacao * 0.1))
 
         

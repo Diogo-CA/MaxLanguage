@@ -1,5 +1,11 @@
 """
 Arquivo responsável pela Inclusão, Exclusão e Busca
+
+Os métodos NÃO imprimem nada: eles retornam os resultados para quem os chamou
+(a interface gráfica). Padrão adotado:
+    - cadastrar_* / excluir_*  -> (sucesso: bool, mensagem: str)
+    - buscar_*                 -> (sucesso: bool, dados: dict) ou (False, mensagem: str)
+    - listar_*                 -> lista de objetos
 """
 
 from controllers.indexador import Indexador
@@ -17,6 +23,18 @@ class ControllerCrud:
     def __init__(self, indexador: Indexador):
         self.indexador = indexador
 
+    def _inserir(self, arquivo, objeto, msg_sucesso: str, msg_duplicado: str):
+        """
+        Insere o objeto no arquivo indexado e traduz o resultado em (sucesso, mensagem).
+        O ValueError acontece quando algum campo passa do tamanho fixo do registro.
+        """
+        try:
+            if arquivo.inserir(objeto):
+                return True, msg_sucesso
+            return False, msg_duplicado
+        except ValueError:
+            return False, "Algum campo excede o tamanho máximo permitido."
+
     """ 
     ==============================
     1˚ REQUISITO - INCLUSÃO
@@ -27,152 +45,116 @@ class ControllerCrud:
                         pontuacao: float):
 
         if self.indexador.idiomas.buscar(cod_idioma) is None:
-            print("Idioma não encontrado. Cadastre o idioma antes.")
-            return
-        
-        novo_usuario = Usuario(codigo, nome, cod_idioma, nivel, pontuacao)
+            return False, "Idioma não encontrado. Cadastre o idioma antes."
 
-        if self.indexador.usuarios.inserir(novo_usuario):
-            print("Usuário cadastrado com sucesso!")
-        else:
-            print("Código já cadastrado, tente outro código!")
-    
+        novo_usuario = Usuario(codigo, nome, cod_idioma, nivel, pontuacao)
+        return self._inserir(self.indexador.usuarios, novo_usuario,
+                             "Usuário cadastrado com sucesso!",
+                             "Código já cadastrado, tente outro código!")
+
     def listar_usuario(self):
-        usuarios = self.indexador.usuarios.listar_todos()
-        if not usuarios:
-            print("Nenhum usuario cadastrado")
-            return
-        
-        for usuario in usuarios:
-            print(f"ID: {usuario.codigo} | Nome: {usuario.nome}")
+        return self.indexador.usuarios.listar_todos()
 
     def cadastrar_idioma(self, codigo: int, descricao: str):
-        novo_idioma = Idioma(codigo, descricao)
-        if self.indexador.idiomas.inserir(novo_idioma):
-            print("Idioma cadastrado com sucesso!")
-        else:
-            print("Idioma já cadastrado.")
-    
+        return self._inserir(self.indexador.idiomas, Idioma(codigo, descricao),
+                             "Idioma cadastrado com sucesso!",
+                             "Idioma já cadastrado.")
 
     def listar_idioma(self):
-        idiomas = self.indexador.idiomas.listar_todos()
-        if not idiomas:
-            print("Nenhum idioma cadastrado.")
-            return
-
-        for idioma in idiomas:
-            print(f"ID: {idioma.codigo} | Nome: {idioma.descricao}")
-    
+        return self.indexador.idiomas.listar_todos()
 
     def cadastrar_licao(self, cod_licao: int, cod_idioma: int, total_niveis: int):
         if self.indexador.idiomas.buscar(cod_idioma) is None:
-            print("Idioma não encontrado. Cadastre o idioma antes.")
-            return
+            return False, "Idioma não encontrado. Cadastre o idioma antes."
 
         nova_licao = Licao(cod_licao, cod_idioma, total_niveis)
-        if self.indexador.licoes.inserir(nova_licao):
-            print("Lição cadastrado com sucesso!")
-        else:
-            print("Lição já cadastrada.")
-    
+        return self._inserir(self.indexador.licoes, nova_licao,
+                             "Lição cadastrada com sucesso!",
+                             "Lição já cadastrada.")
+
     def listar_licao_do_idioma(self, cod_idioma: int):
-        licoes = self.indexador.licoes.listar_todos()
-        if not licoes:
-            print("Nenhuma lição cadastrada para este idioma.")
-            return False
-        
-        encontrou = False
-        for licao in licoes:
-            if licao.cod_idioma == cod_idioma:
-                print(f"Lição [{licao.cod_licao}] - Total de Níveis: {licao.total_niveis}")
-                encontrou = True
-        
-        if not encontrou:
-            print("Nenhuma lição cadastrada para este idioma.")
-            return False
-            
-        return True
+        """Retorna apenas as lições do idioma informado (lista vazia se não houver)."""
+        return [licao for licao in self.indexador.licoes.listar_todos()
+                if licao.cod_idioma == cod_idioma]
+
+    def listar_licao(self):
+        return self.indexador.licoes.listar_todos()
+
+    def listar_exercicio(self):
+        return self.indexador.exercicios.listar_todos()
 
     def cadastrar_exercicio(self, cod_exercicio: int, cod_licao: int, nivel_dificuldade: int, descricao: str, opcoes: str, resposta: str, pontuacao: float):
         if self.indexador.licoes.buscar(cod_licao) is None:
-            print("Lição não encontrada. Cadastre a lição antes.")
-            return
+            return False, "Lição não encontrada. Cadastre a lição antes."
 
         novo_exercicio = Exercicio(cod_exercicio, cod_licao, nivel_dificuldade, descricao, opcoes, resposta, pontuacao)
-        if self.indexador.exercicios.inserir(novo_exercicio):
-            print("Exercício cadastrado com sucesso!")
-        else:
-            print("Exercício já cadastrado.")
+        return self._inserir(self.indexador.exercicios, novo_exercicio,
+                             "Exercício cadastrado com sucesso!",
+                             "Exercício já cadastrado.")
 
     """ 
     ==============================
     REQUISITO 2, 3 e 4: BUSCA + RELACIONAMENTO
     ==============================
     """
+    def descricao_idioma(self, cod_idioma: int):
+        """
+        Auxiliar dos requisitos 2, 3 e 4: devolve a descrição do idioma,
+        ou None se o código não existir. A tela usa para mostrar o nome ao digitar o código.
+        """
+        idioma = self.indexador.idiomas.buscar(cod_idioma)
+        return idioma.descricao if idioma is not None else None
+
     def buscar_usuario_com_idioma(self, codigo_usuario: int):
         usuario = self.indexador.usuarios.buscar(codigo_usuario)
 
         if usuario is None:
-            print("Usuário não encontrado.")
-            return
+            return False, "Usuário não encontrado."
 
-        idioma = self.indexador.idiomas.buscar(usuario.cod_idioma)
-        descricao_idioma = "Idioma Desconhecido (ID Inválido)"
-
-        if idioma is not None:
-            descricao_idioma = idioma.descricao
-
-        print(f"[{usuario.codigo}] {usuario.nome} - Nível: {usuario.nivel_atual} | Idioma: {descricao_idioma}")
+        descricao = self.descricao_idioma(usuario.cod_idioma)
+        return True, {
+            "usuario": usuario,
+            "descricao_idioma": descricao or "Idioma Desconhecido (ID Inválido)"
+        }
 
     def buscar_licao_com_idioma(self, cod_licao: int):
         # Requisito 2: Ao informar lição, exibir a descricao do idioma
         licao = self.indexador.licoes.buscar(cod_licao)
         if licao is None:
-            print("Lição não encontrada.")
-            return
+            return False, "Lição não encontrada."
 
-        idioma = self.indexador.idiomas.buscar(licao.cod_idioma)
-        descricao_idioma = "Desconhecido"
-        if idioma is not None:
-            descricao_idioma = idioma.descricao
-        else:
-            print("Idioma não encontrado.") 
-        print(f"Lição [{licao.cod_licao}] - Total de Níveis: {licao.total_niveis} | Idioma: {descricao_idioma}")
+        descricao = self.descricao_idioma(licao.cod_idioma)
+        return True, {
+            "licao": licao,
+            "descricao_idioma": descricao or "Desconhecido"
+        }
 
     def buscar_exercicio_com_idioma(self, cod_exercicio: int):
         # Requisito 3: Ao informar o Exercício, mostrar o idioma
         exercicio = self.indexador.exercicios.buscar(cod_exercicio)
         if exercicio is None:
-            print("Exercício não encontrado.")
-            return
+            return False, "Exercício não encontrado."
 
         licao = self.indexador.licoes.buscar(exercicio.cod_licao)
-        descricao_idioma = "Desconhecido"
-
         if licao is None:
-            print("Lição não encontrada")
-            return
+            return False, "Lição não encontrada."
 
-        idioma = self.indexador.idiomas.buscar(licao.cod_idioma)
-        if idioma is None:
-            print("Idioma não encontrado")
-            return
+        descricao = self.descricao_idioma(licao.cod_idioma)
+        if descricao is None:
+            return False, "Idioma não encontrado."
 
-        descricao_idioma = idioma.descricao
-
-        print(f"Exercício [{exercicio.cod_exercicio}] - {exercicio.descricao}")
-        print(f"Dificuldade: Nível {exercicio.nivel_dificuldade} | Idioma: {descricao_idioma}")
+        return True, {
+            "exercicio": exercicio,
+            "licao": licao,
+            "descricao_idioma": descricao
+        }
 
     def buscar_idioma(self, codigo : int):
         idioma = self.indexador.idiomas.buscar(codigo)
         if idioma is None:
-            print("Idioma não encontrado")
-            return
-        print(f"Codigo: {idioma.codigo} | Descrição: {idioma.descricao}")
-    
+            return False, "Idioma não encontrado."
+        return True, {"idioma": idioma}
 
-
-    
     """
     ==============================
     6˚ REQUISITO - EXCLUSÃO
@@ -180,9 +162,5 @@ class ControllerCrud:
     """
     def excluir_usuario(self, codigo_usuario: int):
         if self.indexador.usuarios.excluir(codigo_usuario):
-            print("Usuário excluido com sucesso!")
-        else:
-            print("Usuário não existe para ser excluído")
-
-
-
+            return True, "Usuário excluído com sucesso!"
+        return False, "Usuário não existe para ser excluído."
