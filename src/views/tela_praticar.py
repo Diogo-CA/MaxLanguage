@@ -3,11 +3,6 @@ import customtkinter as ctk
 from views import tema, componentes
 
 class TelaPraticar(ctk.CTkFrame):
-    """
-    Interface de Aprendizado Guiado & Progressivo (Inspirada no Duolingo).
-    O aluno avança passo a passo de forma linear através dos exercícios da sua trilha.
-    Detecta promoções de nível e exibe ações inteligentes de transição.
-    """
     def __init__(self, master, crud, pratica):
         super().__init__(master, fg_color="transparent")
         self.crud = crud
@@ -54,7 +49,7 @@ class TelaPraticar(ctk.CTkFrame):
         # A) Card do Quiz
         self.card_quiz = ctk.CTkFrame(self.container_dinamico, fg_color=tema.BRANCO_CARD, corner_radius=18,
                                       border_width=1, border_color=tema.BORDA_SUAVE)
-        
+
         # Header do Card Quiz (Badges de Dificuldade e Pontuação)
         self.header_quiz = ctk.CTkFrame(self.card_quiz, fg_color="transparent")
         self.header_quiz.pack(fill="x", padx=20, pady=(16, 6))

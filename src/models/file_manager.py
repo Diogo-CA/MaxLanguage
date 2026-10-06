@@ -23,7 +23,20 @@ class FileManager:
         FileManager.garantir_arquivo_existe(caminho_arquivo)
         tamanho = os.path.getsize(caminho_arquivo)
         if (tamanho % tam_registro) != 0:
-            raise ValueError(f"O arquivo tem {tamanho} bytes e não é multiplo de {tam_registro}")
+            # Verifica se os bytes extras no final são apenas quebras de linha (\n ou \r\n) inseridas por editores
+            tamanho_valido = (tamanho // tam_registro) * tam_registro
+            with open(caminho_arquivo, 'rb') as f:
+                f.seek(tamanho_valido)
+                resto_bytes = f.read()
+            
+            if resto_bytes.strip(b'\r\n \x00') == b'':
+                # Remove os bytes vazios/quebras extras do final truncando para o tamanho válido
+                with open(caminho_arquivo, 'r+b') as f:
+                    f.truncate(tamanho_valido)
+                tamanho = tamanho_valido
+            else:
+                raise ValueError(f"O arquivo tem {tamanho} bytes e não é multiplo de {tam_registro}")
+                
         num_registros = tamanho // tam_registro
         return num_registros
 
